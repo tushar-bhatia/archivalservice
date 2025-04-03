@@ -36,7 +36,7 @@ public class AppConfig {
     }
 
     @Bean
-    public JdbcTemplate archiveTemplate(@Qualifier("dataSource") DataSource dataSource) {
+    public JdbcTemplate databaseTemplate(@Qualifier("dataSource") DataSource dataSource) {
         return new JdbcTemplate(dataSource);
     }
 
