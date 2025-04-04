@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
 import javax.sql.DataSource;
 
@@ -36,8 +37,8 @@ public class AppConfig {
     }
 
     @Bean
-    public JdbcTemplate databaseTemplate(@Qualifier("dataSource") DataSource dataSource) {
-        return new JdbcTemplate(dataSource);
+    public NamedParameterJdbcTemplate databaseTemplate(@Qualifier("dataSource") DataSource dataSource) {
+        return new NamedParameterJdbcTemplate(dataSource);
     }
 
     @Bean
