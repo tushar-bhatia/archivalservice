@@ -4,6 +4,7 @@ import com.process.archivalservice.model.Column;
 import com.process.archivalservice.model.ConfigType;
 import com.process.archivalservice.model.Configuration;
 import com.process.archivalservice.model.Row;
+import com.process.archivalservice.util.ArchiveUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -35,7 +36,7 @@ public class ArchivalDao {
 
     private final String getConfigQuery = "SELECT * FROM core.CONFIGURATION WHERE CONFIGURATION_TYPE=:type";
 
-    private final String getTableDataQuery = "SELECT * FROM main.%s WHERE UPDATED<=:timestamp";
+    private final String getEligibleDataQuery = "SELECT * FROM %s.%s WHERE UPDATED<=:timestamp";
 
     private final String getGeoLocationsQuery = "SELECT DISTINCT LOCATION FROM core.GEOLOCATION";
 
@@ -67,21 +68,13 @@ public class ArchivalDao {
     }
 
 
-    public List<Row> getResults(String tableName, Timestamp maxAllowedTimestamp) {
+    public List<Row> getEligibleRows(String tableName, String location, Timestamp maxAllowedTimestamp) {
         List<Row> rows = new ArrayList<>();
-        String finalQueryToBeUsed = String.format(getTableDataQuery, tableName);
+        String eligibleQuery = String.format(getEligibleDataQuery, location, tableName);
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("timestamp", maxAllowedTimestamp);
-        databaseTemplate.query(finalQueryToBeUsed, params, rs -> {
-            ResultSetMetaData metaData = rs.getMetaData();
-            List<Column> columns = new ArrayList<>();
-            int columnCount = metaData.getColumnCount();
-            for(int i=1; i<=columnCount; i++) {
-                String columnName = metaData.getColumnName(i);
-                Object value = rs.getObject(i);
-                columns.add(new Column(columnName, value));
-            }
-            rows.add(new Row(columns));
+        databaseTemplate.query(eligibleQuery, params, rs -> {
+            rows.addAll(ArchiveUtils.parse(rs));
         });
         return rows;
     }

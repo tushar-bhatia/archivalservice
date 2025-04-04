@@ -3,14 +3,13 @@ package com.process.archivalservice.service;
 import com.process.archivalservice.dao.ArchivalDao;
 import com.process.archivalservice.model.Configuration;
 import com.process.archivalservice.model.Row;
+import com.process.archivalservice.util.ArchiveUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
@@ -24,8 +23,8 @@ public class ArchivalProcessor {
     @Transactional(rollbackFor = Exception.class)
     public void archive(Configuration config) {
         log.info("Checking the eligible data from {} table", config.getTableName());
-        Timestamp latestTimestamp = getLastTimestamp(config);
-        List<Row> rowsToBeArchived = archivalDao.getResults(config.getTableName(), latestTimestamp);
+        Timestamp latestTimestamp = ArchiveUtils.getLastTimestamp(config);
+        List<Row> rowsToBeArchived = archivalDao.getEligibleRows(config.getTableName(), "main", latestTimestamp);
         if(rowsToBeArchived.isEmpty()) {
             log.info("No eligible row found in [ {} ] table", config.getTableName());
         } else {
@@ -59,16 +58,5 @@ public class ArchivalProcessor {
             log.error("{}", e.getMessage());
             throw new RuntimeException(e);
         }
-    }
-
-    private Timestamp getLastTimestamp(Configuration config) {
-        LocalDateTime now = LocalDateTime.now();
-        now.minusYears(config.getYears());
-        now.minusMonths(config.getMonths());
-        now.minusWeeks(config.getWeeks());
-        now.minusDays(config.getDays());
-        now.minusHours(config.getHours());
-        now.minusMinutes(config.getMinutes());
-        return Timestamp.valueOf(now);
     }
 }
