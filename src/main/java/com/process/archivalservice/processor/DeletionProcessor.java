@@ -28,7 +28,7 @@ public class DeletionProcessor {
     public void deleteData(Configuration config, String location) {
         log.info("Checking the eligible data for deletion from [ {} ] table at {} location", config.getTableName(), location);
         Timestamp latestTimestamp = ArchiveUtils.getLastTimestamp(config);
-        List<Row> rowsToDeleted = archivalDao.getEligibleRows(config.getTableName(), location, latestTimestamp);
+        List<Row> rowsToDeleted = archivalDao.getEligibleRowsForDeletion(config.getTableName(), location, latestTimestamp);
         if(rowsToDeleted.isEmpty()) {
             log.info("No eligible data found for deletion for [ {} ] table in {} location", config.getTableName(), location);
         } else {

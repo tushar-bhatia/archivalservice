@@ -1,5 +1,6 @@
 package com.process.archivalservice.model;
 
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.persistence.Column;
@@ -8,7 +9,6 @@ import lombok.*;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
-
 @AllArgsConstructor
 @Getter
 @NoArgsConstructor
@@ -16,39 +16,23 @@ import java.time.LocalDateTime;
 @ToString
 @Builder
 @Entity
-@Table(name = "configuration", catalog="core")
-public final class Configuration {
+@Table(name = "permission", catalog="core")
+public class Permission {
+
     @Id
+    @JsonIgnore
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ID")
+    @jakarta.persistence.Column(name = "ID")
     private Integer id;
 
-    @Column(name = "TABLE_NAME")
-    private String tableName;
+    @jakarta.persistence.Column(name = "ROLE_NAME")
+    private String roleName;
 
-    @Column(name = "CONFIGURATION_TYPE")
-    private String configurationType;
-
-    @Column(name = "YEARS")
-    private int years;
-
-    @Column(name = "MONTHS")
-    private int months;
-
-    @Column(name = "WEEKS")
-    private int weeks;
-
-    @Column(name = "DAYS")
-    private int days;
-
-    @Column(name = "HOURS")
-    private int hours;
-
-    @Column(name = "MINUTES")
-    private int minutes;
+    @jakarta.persistence.Column(name = "USER_NAME")
+    private String userName;
 
     @JsonIgnore
-    @Column(name = "CREATED")
+    @jakarta.persistence.Column(name = "CREATED")
     private Timestamp created;
 
     @JsonIgnore

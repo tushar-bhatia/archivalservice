@@ -9,10 +9,12 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class ArchiveUtils {
+
+    private static final Set<String> columnsToBeExcluded = Set.of("ID", "CREATED", "UPDATED", "ARCHIVED");
 
     private ArchiveUtils(){}
 
@@ -50,5 +52,19 @@ public class ArchiveUtils {
         }
         rows.add(new Row(columns));
         return rows;
+    }
+
+    public static List<Map<String, Object>> parseRows(List<Row> rows) {
+        return rows.stream().map(ArchiveUtils::parseRow).toList();
+    }
+
+    private static Map<String, Object> parseRow(Row row) {
+        List<Map.Entry<String, Object>> entries = row.getColumns().stream().map(ArchiveUtils::getEntry).toList();
+        entries = entries.stream().filter(e -> !columnsToBeExcluded.contains(e.getKey())).toList();
+        return entries.stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    private static Map.Entry<String, Object> getEntry(Column col) {
+        return Map.entry(col.getColumnName(), col.getValue());
     }
 }

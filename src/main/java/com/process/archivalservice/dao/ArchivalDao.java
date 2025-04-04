@@ -5,16 +5,20 @@ import com.process.archivalservice.model.ConfigType;
 import com.process.archivalservice.model.Configuration;
 import com.process.archivalservice.model.Row;
 import com.process.archivalservice.util.ArchiveUtils;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.jdbc.core.RowMapper;
+import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
+
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -31,10 +35,14 @@ public class ArchivalDao {
     @Qualifier("databaseTemplate")
     NamedParameterJdbcTemplate databaseTemplate;
 
+    @Autowired
+    @Qualifier("configurationRepository")
+    ConfigurationRepository configurationRepository;
+
     @Value("${batch.size}")
     int batchSize;
 
-    private final String getConfigQuery = "SELECT * FROM core.CONFIGURATION WHERE CONFIGURATION_TYPE=:type";
+    private final String getEligibleArchiveDataQuery = "SELECT * FROM %s.%s WHERE ARCHIVED<=:timestamp";
 
     private final String getEligibleDataQuery = "SELECT * FROM %s.%s WHERE UPDATED<=:timestamp";
 
@@ -44,31 +52,19 @@ public class ArchivalDao {
 
     private final String deleteQueryTemplate = "DELETE FROM %s.%s WHERE %s";
 
+    private final String getArchiveDataQuery = "SELECT * FROM %s.%s";
+
     /***
      * fetches all the policies configured in teh system for a given configuration
      * @param type tells about the type of policy we are looking. Can we either of ARCHIVAL/DELETION
      * @return retuns the list of all the policies configured for a given type.
      */
     public List<Configuration> getAllConfiguration(ConfigType type) {
-        MapSqlParameterSource params = new MapSqlParameterSource();
-        params.addValue("type", type.name());
-        return databaseTemplate.query(getConfigQuery, params, (rs, rowNum) -> Configuration.builder()
-                .id(rs.getInt("ID"))
-                .tableName(rs.getString("TABLE_NAME"))
-                .configurationType(rs.getString("CONFIGURATION_TYPE"))
-                .years(rs.getInt("YEARS"))
-                .months(rs.getInt("MONTHS"))
-                .weeks(rs.getInt("WEEKS"))
-                .days(rs.getInt("DAYS"))
-                .hours(rs.getInt("HOURS"))
-                .minutes(rs.getInt("MINUTES"))
-                .created(rs.getTimestamp("CREATED"))
-                .updated(rs.getTimestamp("UPDATED"))
-                .build());
+        return configurationRepository.findByConfigurationType(type.name());
     }
 
     /***
-     * fetches the data for a given table which is eligible for the archival.
+     * Fetches the data for a given table which is eligible for the archival.
      * @param tableName table eligible for the archival
      * @param location geo location at which data needs to be evaluated.
      * @param maxAllowedTimestamp parameter which tells what's the max duration we can keep the data.
@@ -77,6 +73,25 @@ public class ArchivalDao {
     public List<Row> getEligibleRows(String tableName, String location, Timestamp maxAllowedTimestamp) {
         List<Row> rows = new ArrayList<>();
         String eligibleQuery = String.format(getEligibleDataQuery, location, tableName);
+        MapSqlParameterSource params = new MapSqlParameterSource();
+        params.addValue("timestamp", maxAllowedTimestamp);
+        databaseTemplate.query(eligibleQuery, params, rs -> {
+            rows.addAll(ArchiveUtils.parse(rs));
+        });
+        return rows;
+    }
+
+
+    /***
+     * Fetches the data for a given table which is eligible for deletion from archive table.
+     * @param tableName table in which data needs to be evaluated.
+     * @param location geo location at which table resides.
+     * @param maxAllowedTimestamp parameter which tells what's the max duration we can keep the data.
+     * @return fetches the rows which are older then maxAllowedTimestamp
+     */
+    public List<Row> getEligibleRowsForDeletion(String tableName, String location, Timestamp maxAllowedTimestamp) {
+        List<Row> rows = new ArrayList<>();
+        String eligibleQuery = String.format(getEligibleArchiveDataQuery, location, tableName);
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("timestamp", maxAllowedTimestamp);
         databaseTemplate.query(eligibleQuery, params, rs -> {
@@ -164,5 +179,20 @@ public class ArchivalDao {
             }
         }
         if(!arguments.isEmpty()) databaseTemplate.batchUpdate(query, arguments.toArray(new MapSqlParameterSource[0]));
+    }
+
+    /***
+     * Responsible to view the data from a given table from a given location
+     * @param tableName table from which data needs to be fetched
+     * @param location location at which the table resides
+     * @return list of rows containing column and their values
+     */
+    public List<Row> getDataFromTable(String tableName, String location) {
+        String query = String.format(getArchiveDataQuery, location, tableName);
+        List<Row> rows = new ArrayList<>();
+        databaseTemplate.query(query, new MapSqlParameterSource(), rs -> {
+            rows.addAll(ArchiveUtils.parse(rs));
+        });
+        return rows;
     }
 }
