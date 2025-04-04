@@ -31,8 +31,8 @@ public class ArchivalDao {
     @Qualifier("databaseTemplate")
     NamedParameterJdbcTemplate databaseTemplate;
 
-    @Value("${archival.batch.size}")
-    int archivalBatchSize;
+    @Value("${batch.size}")
+    int batchSize;
 
     private final String getConfigQuery = "SELECT * FROM core.CONFIGURATION WHERE CONFIGURATION_TYPE=:type";
 
@@ -44,30 +44,36 @@ public class ArchivalDao {
 
     private final String deleteQueryTemplate = "DELETE FROM %s.%s WHERE %s";
 
+    /***
+     * fetches all the policies configured in teh system for a given configuration
+     * @param type tells about the type of policy we are looking. Can we either of ARCHIVAL/DELETION
+     * @return retuns the list of all the policies configured for a given type.
+     */
     public List<Configuration> getAllConfiguration(ConfigType type) {
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("type", type.name());
-        return databaseTemplate.query(getConfigQuery, params, new RowMapper<Configuration>() {
-            @Override
-            public Configuration mapRow(ResultSet rs, int rowNum) throws SQLException {
-                return Configuration.builder()
-                        .id(rs.getInt("ID"))
-                        .tableName(rs.getString("TABLE_NAME"))
-                        .configurationType(rs.getString("CONFIGURATION_TYPE"))
-                        .years(rs.getInt("YEARS"))
-                        .months(rs.getInt("MONTHS"))
-                        .weeks(rs.getInt("WEEKS"))
-                        .days(rs.getInt("DAYS"))
-                        .hours(rs.getInt("HOURS"))
-                        .minutes(rs.getInt("MINUTES"))
-                        .created(rs.getTimestamp("CREATED"))
-                        .updated(rs.getTimestamp("UPDATED"))
-                        .build();
-            }
-        });
+        return databaseTemplate.query(getConfigQuery, params, (rs, rowNum) -> Configuration.builder()
+                .id(rs.getInt("ID"))
+                .tableName(rs.getString("TABLE_NAME"))
+                .configurationType(rs.getString("CONFIGURATION_TYPE"))
+                .years(rs.getInt("YEARS"))
+                .months(rs.getInt("MONTHS"))
+                .weeks(rs.getInt("WEEKS"))
+                .days(rs.getInt("DAYS"))
+                .hours(rs.getInt("HOURS"))
+                .minutes(rs.getInt("MINUTES"))
+                .created(rs.getTimestamp("CREATED"))
+                .updated(rs.getTimestamp("UPDATED"))
+                .build());
     }
 
-
+    /***
+     * fetches the data for a given table which is eligible for the archival.
+     * @param tableName table eligible for the archival
+     * @param location geo location at which data needs to be evaluated.
+     * @param maxAllowedTimestamp parameter which tells what's the max duration we can keep the data.
+     * @return fetches the rows which are older then maxAllowedTimestamp
+     */
     public List<Row> getEligibleRows(String tableName, String location, Timestamp maxAllowedTimestamp) {
         List<Row> rows = new ArrayList<>();
         String eligibleQuery = String.format(getEligibleDataQuery, location, tableName);
@@ -79,33 +85,68 @@ public class ArchivalDao {
         return rows;
     }
 
+    /***
+     * responsible for fetching different geo locations configured.
+     * @return the different geo location configured for the archival.
+     */
     public List<String> getGeoLocations() {
         return databaseTemplate.queryForList(getGeoLocationsQuery, Collections.emptyMap(), String.class);
     }
 
+    /***
+     * responsible for archiving the data from a given table into the given geo location.
+     * @param rows actual data which needs to be archived.
+     * @param tableName table name at which the data needs to be inserted.
+     * @param geoLocation geo location at which the database resides.
+     */
     public void archiveData(List<Row> rows, String tableName, String geoLocation) {
         List<String> columns = rows.get(0).getColumns().stream().map(Column::getColumnName).toList();
         String archiveQuery = getArchiveQuery(columns, tableName, geoLocation);
         dbUpdate(archiveQuery, rows);
     }
 
+    /***
+     * generates the formatted archive query based on the args provided.
+     * @param columns list of columns to be injected into the query.
+     * @param table table name to be injected into the query.
+     * @param schema schema name to be injected into the query.
+     * @return returns the formatted query consist of column names and placeholder ofr the values.
+     */
     private String getArchiveQuery(List<String> columns, String table, String schema) {
         String columnNames = String.join(",", columns);
         String placeholders = columns.stream().map(c -> ":"+c).collect(Collectors.joining(","));
         return String.format(archiveQueryTemplate, schema, table, columnNames, placeholders);
     }
 
+    /***
+     * Responsible for deleting the data from the given table for a given schema.
+     * @param rows carries actual arguments which needs to be deleted.
+     * @param tableName table name on which deletion query needs to be run.
+     * @param geoLocation location at which query needs to be run.
+     */
     public void deleteData(List<Row> rows, String tableName, String geoLocation) {
         List<String> columns = rows.get(0).getColumns().stream().map(Column::getColumnName).toList();
         String deleteQuery = getDeleteQuery(columns, tableName, geoLocation);
         dbUpdate(deleteQuery, rows);
     }
 
+    /***
+     * Generates the formatted delete query based on the args provided.
+     * @param columns list of columns for which the query needs to be formatted.
+     * @param table table name to be injected into the query.
+     * @param schema schema name to be injected into the query,
+     * @return formated query consist of appropriate placeholders with column names.
+     */
     private String getDeleteQuery(List<String> columns, String table, String schema) {
         String columnValue = columns.stream().map(c -> c+"=:"+c).collect(Collectors.joining(" AND "));
         return String.format(deleteQueryTemplate, schema, table, columnValue);
     }
 
+    /***
+     * responsible for actual database operation.
+     * @param query This is the formatted query templated consist of placeholders.
+     * @param rows This has actual arguments which needs to be injected into the query.
+     */
     private void dbUpdate(String query, List<Row> rows) {
         List<MapSqlParameterSource> arguments = new ArrayList<>();
         int counter = 0;
@@ -117,7 +158,7 @@ public class ArchivalDao {
                 params.addValue(col.getColumnName(), col.getValue());
             }
             arguments.add(params);
-            if(arguments.size() == archivalBatchSize) {
+            if(arguments.size() == batchSize) {
                 databaseTemplate.batchUpdate(query, arguments.toArray(new MapSqlParameterSource[0]));
                 arguments.clear();
             }

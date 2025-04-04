@@ -16,6 +16,12 @@ public class ArchiveUtils {
 
     private ArchiveUtils(){}
 
+    /***
+     * This method is responsible for returning last timestamp by substracting the given
+     * parameters from the current timestamp.
+     * @param configuration it consist of all duration parameters which needs to be deducted from the current timestamp.
+     * @return returns the final timestamp after deducting the given duration parameters.
+     */
     public static Timestamp getLastTimestamp(Configuration configuration) {
         return Timestamp.valueOf(LocalDateTime.now()
                 .minusYears(configuration.getYears())
@@ -26,6 +32,12 @@ public class ArchiveUtils {
                 .minusMinutes(configuration.getMinutes()));
     }
 
+    /***
+     * this method is responsible for parsing the given result set of data into list of rows.
+     * @param rs Result Set received from the database after operation.
+     * @return the list of rows received as a response after database operation.
+     * @throws SQLException throws SQL exception.
+     */
     public static List<Row> parse(ResultSet rs) throws SQLException {
         List<Row> rows = new ArrayList<>();
         ResultSetMetaData metaData = rs.getMetaData();
