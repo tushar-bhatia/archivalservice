@@ -1,10 +1,7 @@
 package com.process.archivalservice.model.request;
 
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.*;
 import lombok.*;
 
 @AllArgsConstructor
@@ -16,10 +13,9 @@ public class PermissionRequest {
 
     private Integer id;
 
-    @NotNull(message = "Username can't be null.")
-    @NotBlank(message = "Username can't be blank")
-    @NotEmpty(message = "Username can't be empty")
-    private String userName;
+    @NotNull(message = "Please provide User ID for the user")
+    @Positive
+    private Integer userId;
 
     @NotNull(message = "Role can't be null.")
     @NotBlank(message = "Role can't be blank")

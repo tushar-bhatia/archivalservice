@@ -11,6 +11,7 @@ import java.util.List;
 
 @AllArgsConstructor
 @Getter
+@Setter
 @NoArgsConstructor
 @EqualsAndHashCode
 @ToString
@@ -38,6 +39,9 @@ public class User {
     @JsonIgnore
     @Column(name = "UPDATED")
     private Timestamp updated;
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    private List<Permission> roles;
 
     @PrePersist
     protected void onCreate() {

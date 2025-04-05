@@ -25,11 +25,12 @@ public class Permission {
     @jakarta.persistence.Column(name = "ID")
     private Integer id;
 
+    @ManyToOne
+    @JoinColumn(name = "USER_ID")
+    private User user;
+
     @jakarta.persistence.Column(name = "ROLE_NAME")
     private String roleName;
-
-    @jakarta.persistence.Column(name = "USER_NAME")
-    private String userName;
 
     @JsonIgnore
     @jakarta.persistence.Column(name = "CREATED")
@@ -38,6 +39,8 @@ public class Permission {
     @JsonIgnore
     @Column(name = "UPDATED")
     private Timestamp updated;
+
+
 
     @PrePersist
     protected void onCreate() {
