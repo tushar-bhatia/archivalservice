@@ -1,7 +1,7 @@
 package com.process.archivalservice.controller;
 
 import com.process.archivalservice.dao.ConfigurationRepository;
-import com.process.archivalservice.model.ConfigRequest;
+import com.process.archivalservice.model.request.ConfigRequest;
 import com.process.archivalservice.model.Configuration;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
@@ -13,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/config")

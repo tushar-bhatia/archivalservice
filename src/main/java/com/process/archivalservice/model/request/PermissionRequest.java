@@ -1,4 +1,4 @@
-package com.process.archivalservice.model;
+package com.process.archivalservice.model.request;
 
 
 import jakarta.validation.constraints.NotBlank;

@@ -50,7 +50,6 @@ public class ArchivalDao {
 
     private final String getArchiveDataQuery = "SELECT * FROM %s.%s";
 
-    private final String getUserRolesQuery = "select distinct p.ROLE_NAME from core.user u join core.permission p on u.NAME=p.USER_NAME where u.NAME=:user and u.password=:password";
 
     /***
      * fetches all the policies configured in teh system for a given configuration
@@ -192,24 +191,5 @@ public class ArchivalDao {
             rows.addAll(ArchiveUtils.parse(rs));
         });
         return rows;
-    }
-
-
-    /***
-     * This method is use to fetch the configured roles for a given user. If the list is empty, then,
-     * it typically implies that either user with the given name does not exist or the given password is incorrect.
-     * @param user User for which roles needs to be fetched.
-     * @param password Passowrd for teh given user.
-     * @return Set of configured roles if both user and password matches.
-     */
-    public Set<String> getUserDetails(String user, String password) {
-        Set<String> roles = new HashSet<>();
-        databaseTemplate.query(getUserRolesQuery, new RowCallbackHandler() {
-            @Override
-            public void processRow(ResultSet rs) throws SQLException {
-                roles.add(rs.getString("ROLE_NAME"));
-            }
-        });
-        return roles;
     }
 }

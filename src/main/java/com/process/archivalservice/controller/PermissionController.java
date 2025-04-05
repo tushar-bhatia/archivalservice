@@ -2,7 +2,7 @@ package com.process.archivalservice.controller;
 
 import com.process.archivalservice.dao.PermissionRepository;
 import com.process.archivalservice.model.Permission;
-import com.process.archivalservice.model.PermissionRequest;
+import com.process.archivalservice.model.request.PermissionRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/permission")
@@ -49,7 +50,7 @@ public class PermissionController {
 
 
     @GetMapping("/{user}")
-    public List<Permission> getPermission(
+    public Set<String> getPermissionsForUser(
             @NotNull(message = "User must not be null")
             @NotEmpty(message = "User must not be empty")
             @NotBlank(message = "User must not be blank")
