@@ -36,7 +36,7 @@ public class UserController {
     @PreAuthorize( "hasRole('admin')")
     @PostMapping("/create")
     public ResponseEntity<String> createUser(@Valid @RequestBody UserRequest userRequest) {
-        User user = userRepository.findUserByNameAndPassword(userRequest.getUsername(), userRequest.getPassword());
+        User user = userRepository.findByName(userRequest.getUsername());
         if(user != null) {
             return new ResponseEntity<>("User already exist!", HttpStatus.FOUND);
         }
@@ -51,9 +51,9 @@ public class UserController {
     @PreAuthorize( "hasRole('admin')")
     @PostMapping("/update")
     public ResponseEntity<String> updateUser(@Valid @RequestBody UpdateUserRequest updateUserRequest) {
-        User user = userRepository.findUserByNameAndPassword(updateUserRequest.getUsername(), updateUserRequest.getCurrentPassword());
+        User user = userRepository.findByName(updateUserRequest.getUsername());
         if(user == null) {
-            return new ResponseEntity<>("Either user with name doesn't exist or you have given wrong password", HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("Either user with name doesn't exist", HttpStatus.NOT_FOUND);
         }
         user.setPassword(updateUserRequest.getNewPassword());
         userRepository.save(user);
@@ -67,7 +67,13 @@ public class UserController {
         if(user.isEmpty()) {
             return new ResponseEntity<>("User with given id does not exist!", HttpStatus.NOT_FOUND);
         }
-        userRepository.deleteById(user.get().getId());
+        List<Permission> permissions = permissionRepository.findByUserId(id);
+        if(permissions.stream().map(Permission::getRoleName).collect(Collectors.toSet()).contains("admin")) {
+            if(permissionRepository.findAllAdmin().size() == 1)
+                return new ResponseEntity<>("You can't delete admin user!\nSystem must have atleast 1 admin user!", HttpStatus.FORBIDDEN);
+        }
+        userRepository.deleteById(id);
+        permissionRepository.deleteByUserId(id);
         return new ResponseEntity<>("User deleted successfully!", HttpStatus.OK);
     }
 

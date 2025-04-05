@@ -25,7 +25,7 @@ public class Permission {
     @jakarta.persistence.Column(name = "ID")
     private Integer id;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "USER_ID")
     private User user;
 

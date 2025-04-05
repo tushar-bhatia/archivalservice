@@ -42,7 +42,7 @@ public class PermissionController {
         if(user.isEmpty()) {
             return new ResponseEntity<>("No user found with given user id!", HttpStatus.BAD_REQUEST);
         }
-        Permission permission = permissionRepository.findPermissionByUserIdAndRole(permissionRequest.getUserId(), permissionRequest.getRoleName());
+        Permission permission = permissionRepository.findPermissionByUserIdAndRole(permissionRequest.getUserId(), permissionRequest.getRoleName().toLowerCase());
         if(permission != null) return new ResponseEntity<>("User already permissioned for given role", HttpStatus.OK);
         else {
             permission = Permission.builder()
@@ -59,10 +59,12 @@ public class PermissionController {
     public ResponseEntity<String> revokePermission(@Valid @RequestBody PermissionRequest permissionRequest) {
         Permission permission = permissionRepository.findPermissionByUserIdAndRole(permissionRequest.getUserId(), permissionRequest.getRoleName().toLowerCase());
         if(permission == null) return new ResponseEntity<>("User is not permissioned for this role", HttpStatus.NOT_FOUND);
-        else {
-            permissionRepository.deleteById(permission.getId());
-            return new ResponseEntity<>("Permission revoked for the user!", HttpStatus.OK);
+        if(permissionRequest.getRoleName().equalsIgnoreCase("admin")) {
+            if(permissionRepository.findAllAdmin().size() == 1)
+                return new ResponseEntity<>("You can't revoke admin role!\nSystem must have atleast 1 admin user!", HttpStatus.FORBIDDEN);
         }
+        permissionRepository.deleteById(permission.getId());
+        return new ResponseEntity<>("Permission revoked for the user!", HttpStatus.OK);
     }
 
 
