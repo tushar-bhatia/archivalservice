@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,6 +23,7 @@ public class ConfigurationController {
     @Qualifier("configurationRepository")
     ConfigurationRepository configurationRepository;
 
+    @PreAuthorize( "hasRole('admin')")
     @PostMapping("/create")
     public ResponseEntity<String> insertOrUpdateConfiguration(@Valid @RequestBody ConfigRequest configRequest) {
         Configuration existingConfig = null;
@@ -48,6 +50,7 @@ public class ConfigurationController {
         return new ResponseEntity<>("Configuration Inserted successfully!", HttpStatus.CREATED);
     }
 
+    @PreAuthorize( "hasRole('admin')")
     @GetMapping("/view")
     public List<Configuration> getConfigurationsByType(@Valid @RequestParam(name = "type")
            @Pattern(regexp = "ARCHIVAL|DELETION", message = "Configuration Type must be either ARCHIVAL or DELETION") String type) {
@@ -55,6 +58,7 @@ public class ConfigurationController {
     }
 
 
+    @PreAuthorize( "hasRole('admin')")
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<?> deleteConfigurationsById(@Valid @PathVariable(name = "id") @Positive Integer id) {
         if(configurationRepository.existsById(id)) {

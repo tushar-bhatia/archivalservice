@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -32,6 +33,7 @@ public class UserController {
 
 
 
+    @PreAuthorize( "hasRole('admin')")
     @PostMapping("/create")
     public ResponseEntity<String> createUser(@Valid @RequestBody UserRequest userRequest) {
         User user = userRepository.findUserByNameAndPassword(userRequest.getUsername(), userRequest.getPassword());
@@ -46,6 +48,7 @@ public class UserController {
         return new ResponseEntity<>("User Created successfully!", HttpStatus.CREATED);
     }
 
+    @PreAuthorize( "hasRole('admin')")
     @PostMapping("/update")
     public ResponseEntity<String> updateUser(@Valid @RequestBody UpdateUserRequest updateUserRequest) {
         User user = userRepository.findUserByNameAndPassword(updateUserRequest.getUsername(), updateUserRequest.getCurrentPassword());
@@ -57,6 +60,7 @@ public class UserController {
         return new ResponseEntity<>("User updated successfully!", HttpStatus.OK);
     }
 
+    @PreAuthorize( "hasRole('admin')")
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> deleteUser(@Valid @PathVariable(name = "id") @Positive Integer id) {
         Optional<User> user = userRepository.findById(id);
@@ -67,6 +71,7 @@ public class UserController {
         return new ResponseEntity<>("User deleted successfully!", HttpStatus.OK);
     }
 
+    @PreAuthorize( "hasRole('admin')")
     @GetMapping("/view/{id}")
     public ResponseEntity<?> getUserDetails(@Valid @PathVariable(name = "id") @Positive Integer userId) {
         Optional<User> user = userRepository.findById(userId);
@@ -80,6 +85,7 @@ public class UserController {
     }
 
 
+    @PreAuthorize( "hasRole('admin')")
     @GetMapping("/view")
     public ResponseEntity<?> getUserAllDetails() {
         List<User> users = userRepository.findAll();
@@ -93,6 +99,4 @@ public class UserController {
         }).collect(Collectors.toSet());
         return new ResponseEntity<>(userDetails, HttpStatus.OK);
     }
-
-
 }

@@ -2,7 +2,6 @@ package com.process.archivalservice.controller;
 
 import com.process.archivalservice.dao.ArchivalDao;
 import com.process.archivalservice.model.Row;
-import com.process.archivalservice.model.response.ArchiveDetail;
 import com.process.archivalservice.util.ArchiveUtils;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -12,8 +11,12 @@ import jakarta.validation.constraints.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -27,8 +30,9 @@ public class ArchiveDataController {
     @Qualifier("archivalDao")
     ArchivalDao archivalDao;
 
+    @PreAuthorize( "hasRole('admin') or hasRole(#tableName.toLowerCase())")
     @GetMapping({"/{table}/{location}", "/{table}"})
-    public ArchiveDetail viewArchiveData(
+    public ResponseEntity<?> viewArchiveData(
             @Valid
             @NotBlank(message = "Table name can't be blank")
             @NotEmpty(message = "Table name can't be empty")
@@ -41,6 +45,8 @@ public class ArchiveDataController {
         log.info("Request Received to read the data from [ {} ] archive table.", tableName);
         location = location==null ? "us" : location.toLowerCase();
         List<Row> rows = archivalDao.getDataFromTable(tableName, location);
-        return new ArchiveDetail(tableName ,ArchiveUtils.parseRows(rows));
+        Map<String, List<Map<String, Object>>> response = new HashMap<>(1);
+        response.put(tableName, ArchiveUtils.parseRows(rows));
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

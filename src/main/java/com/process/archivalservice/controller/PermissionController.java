@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -34,6 +35,7 @@ public class PermissionController {
     @Qualifier("userRepository")
     UserRepository userRepository;
 
+    @PreAuthorize( "hasRole('admin')")
     @PostMapping("/grant")
     public ResponseEntity<String> grantPermission(@Valid @RequestBody PermissionRequest permissionRequest) {
         Optional<User> user = userRepository.findById(permissionRequest.getUserId());
@@ -52,6 +54,7 @@ public class PermissionController {
         }
     }
 
+    @PreAuthorize( "hasRole('admin')")
     @DeleteMapping("/revoke")
     public ResponseEntity<String> revokePermission(@Valid @RequestBody PermissionRequest permissionRequest) {
         Permission permission = permissionRepository.findPermissionByUserIdAndRole(permissionRequest.getUserId(), permissionRequest.getRoleName().toLowerCase());
@@ -63,6 +66,7 @@ public class PermissionController {
     }
 
 
+    @PreAuthorize("hasRole('admin')")
     @GetMapping("/{userId}")
     public ResponseEntity<?> getRolesForUser(
             @Valid

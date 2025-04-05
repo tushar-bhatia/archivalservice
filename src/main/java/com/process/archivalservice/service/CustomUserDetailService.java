@@ -33,7 +33,7 @@ public class CustomUserDetailService implements UserDetailsService {
         User user = userRepository.findByName(username);
         if (user == null) throw new UsernameNotFoundException("User not found with username: " + username);
         List<Permission> permission = permissionRepository.findByUserId(user.getId());
-        Set<GrantedAuthority> authorities = permission.stream().map(p -> new SimpleGrantedAuthority(p.getRoleName())).collect(Collectors.toSet());
+        Set<GrantedAuthority> authorities = permission.stream().map(p -> new SimpleGrantedAuthority("ROLE_" + p.getRoleName())).collect(Collectors.toSet());
         return new org.springframework.security.core.userdetails.User(user.getName(), user.getPassword(), authorities);
     }
 }
