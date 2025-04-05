@@ -20,6 +20,6 @@ public class PermissionRequest {
     @NotNull(message = "Role can't be null.")
     @NotBlank(message = "Role can't be blank")
     @NotEmpty(message = "Role can't be empty")
-    @Pattern(regexp = "ADMIN|STUDENT|GRADES|ATTENDANCE", message = "Role name should either be STUDENT or GRADES or ATTENDANCE or ADMIN")
+    @Pattern(regexp = "ADMIN|admin|STUDENT|student|GRADES|grades|ATTENDANCE|attendance", message = "Role name should either be STUDENT or GRADES or ATTENDANCE or ADMIN")
     private String roleName;
 }

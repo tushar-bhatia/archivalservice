@@ -58,7 +58,7 @@ public class UserController {
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<String> updateUser(@Valid @PathVariable(name = "id") @Positive Integer id) {
+    public ResponseEntity<String> deleteUser(@Valid @PathVariable(name = "id") @Positive Integer id) {
         Optional<User> user = userRepository.findById(id);
         if(user.isEmpty()) {
             return new ResponseEntity<>("User with given id does not exist!", HttpStatus.NOT_FOUND);

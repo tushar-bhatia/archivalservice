@@ -45,7 +45,7 @@ public class PermissionController {
         else {
             permission = Permission.builder()
                     .user(user.get())
-                    .roleName(permissionRequest.getRoleName())
+                    .roleName(permissionRequest.getRoleName().toLowerCase())
                     .build();
             permissionRepository.save(permission);
             return new ResponseEntity<>("Role successfully granted to user!", HttpStatus.OK);
@@ -54,7 +54,7 @@ public class PermissionController {
 
     @DeleteMapping("/revoke")
     public ResponseEntity<String> revokePermission(@Valid @RequestBody PermissionRequest permissionRequest) {
-        Permission permission = permissionRepository.findPermissionByUserIdAndRole(permissionRequest.getUserId(), permissionRequest.getRoleName());
+        Permission permission = permissionRepository.findPermissionByUserIdAndRole(permissionRequest.getUserId(), permissionRequest.getRoleName().toLowerCase());
         if(permission == null) return new ResponseEntity<>("User is not permissioned for this role", HttpStatus.NOT_FOUND);
         else {
             permissionRepository.deleteById(permission.getId());

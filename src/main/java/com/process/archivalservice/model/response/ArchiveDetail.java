@@ -4,13 +4,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Set;
+import java.util.List;
+import java.util.Map;
 
-@Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserDetail {
-    int userId;
-    String userName;
-    Set<String> roles;
+@Data
+public class ArchiveDetail {
+    String tableName;
+    List<Map<String, Object>> tableData;
 }

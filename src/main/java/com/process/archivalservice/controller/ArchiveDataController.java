@@ -2,6 +2,7 @@ package com.process.archivalservice.controller;
 
 import com.process.archivalservice.dao.ArchivalDao;
 import com.process.archivalservice.model.Row;
+import com.process.archivalservice.model.response.ArchiveDetail;
 import com.process.archivalservice.util.ArchiveUtils;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -27,7 +28,7 @@ public class ArchiveDataController {
     ArchivalDao archivalDao;
 
     @GetMapping({"/{table}/{location}", "/{table}"})
-    public List<Map<String, Object>> viewArchiveData(
+    public ArchiveDetail viewArchiveData(
             @Valid
             @NotBlank(message = "Table name can't be blank")
             @NotEmpty(message = "Table name can't be empty")
@@ -36,9 +37,10 @@ public class ArchiveDataController {
             @PathVariable(name = "table") String tableName,
             @Pattern(regexp = "us|ln|hk", message = "location should either be hk or ln or us")
             @PathVariable(name="location", required = false) String location) {
+        tableName = tableName.toLowerCase();
         log.info("Request Received to read the data from [ {} ] archive table.", tableName);
-        if(location == null) location = "us";
+        location = location==null ? "us" : location.toLowerCase();
         List<Row> rows = archivalDao.getDataFromTable(tableName, location);
-        return ArchiveUtils.parseRows(rows);
+        return new ArchiveDetail(tableName ,ArchiveUtils.parseRows(rows));
     }
 }
