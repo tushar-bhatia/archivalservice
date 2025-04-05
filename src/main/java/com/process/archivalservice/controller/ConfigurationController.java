@@ -49,14 +49,14 @@ public class ConfigurationController {
     }
 
     @GetMapping("/view")
-    public List<Configuration> getConfigurationsByType(@RequestParam(name = "type")
+    public List<Configuration> getConfigurationsByType(@Valid @RequestParam(name = "type")
            @Pattern(regexp = "ARCHIVAL|DELETION", message = "Configuration Type must be either ARCHIVAL or DELETION") String type) {
         return configurationRepository.findByConfigurationType(type);
     }
 
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> deleteConfigurationsById(@PathVariable(name = "id") @Positive Integer id) {
+    public ResponseEntity<?> deleteConfigurationsById(@Valid @PathVariable(name = "id") @Positive Integer id) {
         if(configurationRepository.existsById(id)) {
             configurationRepository.deleteById(id);
             return new ResponseEntity<>("Configuration deleted successfully!", HttpStatus.OK);

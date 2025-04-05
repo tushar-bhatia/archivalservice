@@ -5,6 +5,7 @@ import com.process.archivalservice.dao.UserRepository;
 import com.process.archivalservice.model.Permission;
 import com.process.archivalservice.model.User;
 import com.process.archivalservice.model.request.PermissionRequest;
+import com.process.archivalservice.model.response.UserDetail;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/permission")
@@ -63,12 +65,17 @@ public class PermissionController {
 
     @GetMapping("/{userId}")
     public ResponseEntity<?> getRolesForUser(
+            @Valid
             @NotNull(message = "UserId must not be null")
             @Positive
             @PathVariable(name = "userId") Integer userId) {
         Optional<User> user = userRepository.findById(userId);
         if(user.isEmpty()) {
             return new ResponseEntity<>("User not found with given id!", HttpStatus.BAD_REQUEST);
-        } else return new ResponseEntity<>(user.get().getRoles(), HttpStatus.BAD_REQUEST);
+        }
+        List<Permission> permissions = permissionRepository.findByUserId(userId);
+        Set<String> roles = permissions.stream().map(Permission::getRoleName).collect(Collectors.toSet());
+        UserDetail detail = new UserDetail(user.get().getId(), user.get().getName(), roles);
+        return new ResponseEntity<>(detail, HttpStatus.OK);
     }
 }

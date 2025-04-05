@@ -3,6 +3,7 @@ package com.process.archivalservice.controller;
 import com.process.archivalservice.dao.ArchivalDao;
 import com.process.archivalservice.model.Row;
 import com.process.archivalservice.util.ArchiveUtils;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -27,6 +28,7 @@ public class ArchiveDataController {
 
     @GetMapping({"/{table}/{location}", "/{table}"})
     public List<Map<String, Object>> viewArchiveData(
+            @Valid
             @NotBlank(message = "Table name can't be blank")
             @NotEmpty(message = "Table name can't be empty")
             @NotNull(message = "Table name can't be null")
