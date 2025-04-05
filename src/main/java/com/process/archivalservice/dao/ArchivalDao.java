@@ -1,9 +1,6 @@
 package com.process.archivalservice.dao;
 
-import com.process.archivalservice.model.Column;
-import com.process.archivalservice.model.ConfigType;
-import com.process.archivalservice.model.Configuration;
-import com.process.archivalservice.model.Row;
+import com.process.archivalservice.model.*;
 import com.process.archivalservice.util.ArchiveUtils;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -14,6 +11,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.ResultSetExtractor;
+import org.springframework.jdbc.core.RowCallbackHandler;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -21,9 +19,7 @@ import org.springframework.stereotype.Repository;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -53,6 +49,8 @@ public class ArchivalDao {
     private final String deleteQueryTemplate = "DELETE FROM %s.%s WHERE %s";
 
     private final String getArchiveDataQuery = "SELECT * FROM %s.%s";
+
+    private final String getUserRolesQuery = "select distinct p.ROLE_NAME from core.user u join core.permission p on u.NAME=p.USER_NAME where u.NAME=:user and u.password=:password";
 
     /***
      * fetches all the policies configured in teh system for a given configuration
@@ -194,5 +192,24 @@ public class ArchivalDao {
             rows.addAll(ArchiveUtils.parse(rs));
         });
         return rows;
+    }
+
+
+    /***
+     * This method is use to fetch the configured roles for a given user. If the list is empty, then,
+     * it typically implies that either user with the given name does not exist or the given password is incorrect.
+     * @param user User for which roles needs to be fetched.
+     * @param password Passowrd for teh given user.
+     * @return Set of configured roles if both user and password matches.
+     */
+    public Set<String> getUserDetails(String user, String password) {
+        Set<String> roles = new HashSet<>();
+        databaseTemplate.query(getUserRolesQuery, new RowCallbackHandler() {
+            @Override
+            public void processRow(ResultSet rs) throws SQLException {
+                roles.add(rs.getString("ROLE_NAME"));
+            }
+        });
+        return roles;
     }
 }
